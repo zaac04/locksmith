@@ -1,9 +1,6 @@
 package crypter
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"locksmith/file"
@@ -11,7 +8,7 @@ import (
 	"strings"
 )
 
-func DecryptFile(filename string, PrivKey string) {
+func DecryptFile(filename string, key string) {
 
 	content, err := file.ReadFile(filename)
 	if err != nil {
@@ -20,24 +17,24 @@ func DecryptFile(filename string, PrivKey string) {
 	}
 	Components := strings.Split(string(content), ".")
 
-	if len(Components) != 3 {
+	if len(Components) != 2 {
 		utilities.LogIfError(fmt.Errorf("unable to decode file due to corrupted data"))
 		return
 	}
 
-	header, sign, data, err := decodeFileContents(Components)
+	header, data, err := decodeFileContents(Components)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
 	}
 
-	lock := LoadPrivKey(PrivKey)
-	err = lock.DecryptRsa(sign)
+	lock, err := LoadKey(key)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
 	}
-	original, err := decryptAES(lock.aesKey[12:], lock.aesKey[:12], data)
+
+	original, err := lock.decryptAES(data)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
@@ -53,20 +50,14 @@ func DecryptFile(filename string, PrivKey string) {
 
 }
 
-func decodeFileContents(Components []string) (header header, signature []byte, data []byte, err error) {
+func decodeFileContents(Components []string) (header header, data []byte, err error) {
 
 	headerBytes, err := utilities.B64Decode(Components[0])
 	if err != nil {
-
 		return
 	}
 
-	signature, err = utilities.B64Decode(Components[1])
-	if err != nil {
-		return
-	}
-
-	data, err = utilities.B64Decode(Components[2])
+	data, err = utilities.B64Decode(Components[1])
 	if err != nil {
 		return
 	}
@@ -76,16 +67,15 @@ func decodeFileContents(Components []string) (header header, signature []byte, d
 
 }
 
-func (l *Lock) DecryptRsa(cipher []byte) (err error) {
-	l.aesKey, err = rsa.DecryptOAEP(sha256.New(), rand.Reader, l.privateKey, cipher, nil)
-	return
-}
+func (l *Lock) decryptAES(data []byte) (original []byte, err error) {
+	block, err := l.getAES()
 
-func decryptAES(key []byte, nonce []byte, data []byte) (original []byte, err error) {
-	block, err := getAES(key)
+	nonce := block.NonceSize()
+	l.cipherByte = data
+
 	if err != nil {
 		return
 	}
-	original, err = block.Open(nil, []byte(nonce), data, nil)
+	original, err = block.Open(nil, l.cipherByte[:nonce], l.cipherByte[nonce:], nil)
 	return
 }

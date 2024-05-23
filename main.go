@@ -28,8 +28,6 @@ func main() {
 	rsa, err := crypter.New()
 	utilities.LogIfError(err)
 
-	privkey, _ := rsa.EncryptFile(os.Args[1])
-	fmt.Println("PrivateKey")
-	fmt.Println(privkey)
-
+	key := rsa.EncryptFile(os.Args[1])
+	fmt.Println("Key: ", key)
 }

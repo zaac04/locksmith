@@ -5,26 +5,26 @@ import (
 	"encoding/base64"
 )
 
-func New() (lock Lock, err error) {
-	lock.aesKey, err = generateAESkey()
-	lock.ToString()
+func New(encryption int) (lock Lock, err error) {
+	lock.aesKey, err = generateAESkey(encryption)
+	lock.encryption = encryption
+	lock.toString()
 	return
 }
 
-func NewWithKey(Lock Lock, err error) {
-
+func (e *Lock) GetKey() string {
+	return e.b64Key
 }
-
 
 func LoadKey(publicKey string) (lock Lock, err error) {
 	lock.b64Key = publicKey
 	err = lock.b64decodeKey()
+	lock.encryption = len(lock.aesKey) * 8
 	return
 }
 
-func (e *Lock) ToString() string {
+func (e *Lock) toString() {
 	e.b64encodeKey()
-	return e.b64Key
 }
 
 // b64 private keys
@@ -37,8 +37,8 @@ func (e *Lock) b64decodeKey() (err error) {
 	return
 }
 
-func generateAESkey() ([]byte, error) {
-	key := make([]byte, 32)
+func generateAESkey(encryption int) ([]byte, error) {
+	key := make([]byte, encryption/8)
 	_, err := rand.Read(key)
 	return key, err
 }

@@ -6,9 +6,11 @@ type Lock struct {
 	cipherByte []byte
 	aesKey     []byte
 	message    []byte
+	encryption int
 }
 
 type header struct {
-	Modified string
-	CheckSum string
+	LastModified string
+	CheckSum     string
+	Algorithm    string
 }

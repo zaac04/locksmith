@@ -20,9 +20,14 @@ func GetTimeStamp() string {
 	return time.Now().Format(time.RFC850)
 }
 
-func GetMD5Hash(data []byte) string {
+func GetMD5String(data []byte) string {
+	hash := GetMD5Hash(data)
+	return hex.EncodeToString(hash)
+}
+
+func GetMD5Hash(data []byte) []byte {
 	hash := md5.Sum(data)
-	return hex.EncodeToString(hash[:])
+	return hash[:]
 }
 
 func GetCipherName(name string) string {

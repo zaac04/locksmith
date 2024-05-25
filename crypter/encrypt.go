@@ -11,49 +11,33 @@ import (
 	"locksmith/utilities"
 	"os"
 	"strings"
-
-	"github.com/manifoldco/promptui"
 )
 
 func EncryptFile(fileName string, key string) {
 
-	l, err := LoadKey(key)
-
-	if err != nil {
-		utilities.LogIfError(err)
-		os.Exit(1)
-	}
-	data, err := file.ReadFile(fileName)
-
-	if err != nil {
-		utilities.LogIfError(err)
-		os.Exit(1)
-	}
-
+	l, err := readFile(fileName, key)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
 	}
-
-	err = l.encryptWithAES(data)
+	err = l.encrypt(fileName)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
 	}
-
-	Data, err := l.generateData()
-	if err != nil {
-		utilities.LogIfError(err)
-		return
-	}
-
-	file.WriteFile(utilities.GetCipherName(fileName), []byte(Data))
 
 }
 
-func (l *Lock) encryptWithAES(message []byte) (err error) {
+func Encrypt(l *Lock, filename string) {
+	err := l.encrypt(filename)
+	if err != nil {
+		utilities.LogIfError(err)
+		return
+	}
+}
+
+func (l *Lock) encryptWithAES() (err error) {
 	gcm, err := l.getAES()
-	l.loadMessage(message)
 
 	if err != nil {
 		return
@@ -67,6 +51,21 @@ func (l *Lock) encryptWithAES(message []byte) (err error) {
 	}
 
 	l.cipherByte = gcm.Seal(nil, l.nonce, l.message, nil)
+	return
+}
+
+func (l *Lock) encrypt(filename string) (err error) {
+	err = l.encryptWithAES()
+	if err != nil {
+		return
+	}
+
+	Data, err := l.generateData()
+	if err != nil {
+		return
+	}
+
+	file.WriteFile(utilities.GetCipherName(filename), []byte(Data))
 	return
 }
 
@@ -102,32 +101,20 @@ func (l *Lock) generateData() (finalData string, err error) {
 	return
 }
 
-func Amend(originalFile string, CipherFile string, key string) {
-
-	_, cipher, err := getDecryptedValue(&CipherFile, &key)
+func FinDiff(originalFile string, CipherFile string, key string) (l *Lock, change bool, err error) {
+	_, decrypted, err := getDecryptedValue(&CipherFile, &key)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
 	}
 
-	rawData, err := file.ReadFile(originalFile)
-	if err != nil {
-		utilities.LogIfError(err)
-		return
-	}
-
-	if findDiff(&cipher, &rawData) {
-		if selectOption() {
-			EncryptFile(originalFile, key)
-		}
-
-		return
-	}
-	fmt.Println("No Changed Detected!")
-
+	lock, err := readFile(originalFile, key)
+	change = findDiff(&decrypted, &lock.message)
+	return &lock, change, err
 }
 
 func findDiff(cipher *[]byte, rawData *[]byte) (changed bool) {
+
 	cipherBytes := bytes.Split(*cipher, []byte("\n"))
 	originalBytes := bytes.Split(*rawData, []byte("\n"))
 
@@ -135,58 +122,53 @@ func findDiff(cipher *[]byte, rawData *[]byte) (changed bool) {
 
 	var change bytes.Buffer
 
-	for line = 0; line < len(cipherBytes)-1 && line < len(originalBytes)-1; line++ {
+	for line = 0; line <= len(cipherBytes)-1 && line <= len(originalBytes)-1; line++ {
 		compare := bytes.Compare(utilities.GetMD5Hash(cipherBytes[line]), utilities.GetMD5Hash(originalBytes[line]))
 		if compare != 0 {
 			change.WriteString(fmt.Sprint("\nchange line no:", line+1, "\n"))
-			change.WriteString("cipher file: ")
+			change.WriteString("cipher file: \"")
 			change.Write(cipherBytes[line])
-			change.WriteString("\n")
-			change.WriteString("source file: ")
+			change.WriteString("\"\n")
+			change.WriteString("source file: \"")
 			change.Write(originalBytes[line])
-			change.WriteString("\n")
+			change.WriteString("\"\n")
 		}
 	}
 
-	for i := line; i < len(cipherBytes)-1; i++ {
+	for i := line; i <= len(cipherBytes)-1; i++ {
 		change.WriteString(fmt.Sprint("\nRemoved line:", i+1))
-		change.WriteString("\nvalue: ")
+		change.WriteString("\nvalue: \"")
 		change.Write(cipherBytes[i])
-		change.WriteString("\n")
+		change.WriteString("\"\n")
 	}
 
-	for i := line; i < len(originalBytes)-1; i++ {
+	for i := line; i <= len(originalBytes)-1; i++ {
 		change.WriteString(fmt.Sprint("\nAdded line:", i+1))
-		change.WriteString("\nvalue: ")
+		change.WriteString("\nvalue: \"")
 		change.Write(originalBytes[i])
-		change.WriteString("\n")
+		change.WriteString("\"\n")
 	}
 	if change.Len() != 0 {
 		fmt.Print("----------")
 		fmt.Print(change.String())
-		fmt.Print("----------")
+		fmt.Println("----------")
 		return true
 	}
 	return false
 }
 
-func selectOption() (proceed bool) {
-	options := []string{"Yes", "No"}
+func readFile(filename string, key string) (l Lock, err error) {
+	l, err = LoadKey(key)
 
-	mapOptions := map[string]bool{
-		"Yes": true,
-		"No":  false,
+	if err != nil {
+		os.Exit(1)
 	}
-	prompt := promptui.Select{
-		Label:    "Select an encryption to use:",
-		Items:    options,
-		HideHelp: true,
+	data, err := file.ReadFile(filename)
+
+	if err != nil {
+		os.Exit(1)
 	}
 
-	_, result, _ := prompt.Run()
-
-	if val, ok := mapOptions[result]; ok {
-		return val
-	}
-	return false
+	l.loadMessage(data)
+	return
 }

@@ -18,5 +18,5 @@ var readCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(readCmd)
 	readCmd.Flags().StringP("file", "f", "", "filename")
-	decryptCmd.MarkFlagRequired("file")
+	readCmd.MarkFlagRequired("file")
 }

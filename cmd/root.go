@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"locksmith/utilities"
 	"locksmith/version"
 	"os"
 	"time"
@@ -10,6 +11,7 @@ import (
 )
 
 var VersionFlag bool
+var CtxKey utilities.CtxKey = "key"
 
 var rootCmd = &cobra.Command{
 	Use:   "locksmith",
@@ -18,18 +20,24 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 
-	start := time.Now()
-	print("\n")
+	var val = utilities.Val{
+		Time: time.Now(),
+	}
+
+	ctx := context.WithValue(context.Background(), CtxKey, val)
+	defer utilities.RecoverFromPanic()
+
+	rootCmd.SetContext(ctx)
 	err := rootCmd.Execute()
 
+	utilities.PrintOperationTime(rootCmd.Context(), CtxKey)
 	if err != nil {
 		os.Exit(1)
 	}
-	fmt.Fprintf(os.Stderr, "\nOperation Completed in %s\n", time.Since(start))
+
 }
 
 func init() {
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	rootCmd.Version = version.PrintVersion()
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	rootCmd.CompletionOptions.DisableDescriptions = true

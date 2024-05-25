@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"locksmith/crypter"
 	"locksmith/utilities"
+	"time"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -11,11 +13,20 @@ import (
 
 var genKeyCmd = &cobra.Command{
 	Use:   "genkey",
-	Short: "A brief description of your command",
+	Short: "Generate Secret key for encryption",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		ctxVal := utilities.ReadCtx(cmd.Context(), CtxKey)
+
+		//user start time
+		start := time.Now()
 		encryption := selectOption()
+		ctxVal.UserTime = time.Since(start)
+
+		cmd.Parent().SetContext(context.WithValue(cmd.Context(), CtxKey, ctxVal))
 		Lock, err := crypter.New(encryption)
 		utilities.LogIfError(err)
+
 		fmt.Println("key:", Lock.GetKey())
 	},
 }
@@ -34,7 +45,7 @@ func selectOption() (encryption int) {
 	}
 
 	prompt := promptui.Select{
-		Label:    "Select an encryption to use:",
+		Label:    "\nConfirm Amend:",
 		Items:    options,
 		HideHelp: true,
 	}

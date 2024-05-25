@@ -110,6 +110,7 @@ func ReadCipherFile(filename string) {
 }
 
 func getDecryptedValue(file *string, key *string) (header header, cipher []byte, err error) {
+
 	header, data, err := loadCipherFile(*file)
 
 	if err != nil {

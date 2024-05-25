@@ -22,7 +22,7 @@ func DetectFile() (matches []string, err error) {
 	dir, _ := os.Getwd()
 	dir = GoUpLevel(dir, 1)
 
-	fmt.Println("Searching for files")
+	fmt.Println("Searching for files...")
 
 	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

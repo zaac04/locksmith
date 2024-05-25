@@ -76,7 +76,7 @@ func init() {
 
 func selectFile(matches []string) (result string, file string, err error) {
 	prompt := promptui.Select{
-		Label:    "Select file to amend:",
+		Label:    "Select file to amend",
 		Items:    matches,
 		HideHelp: true,
 	}

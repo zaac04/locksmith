@@ -28,6 +28,12 @@ var amend = &cobra.Command{
 				utilities.LogIfError(err)
 				return
 			}
+
+			if len(matches) == 0 {
+				utilities.LogIfError(fmt.Errorf("%s", "no files found!"))
+				return
+			}
+
 			start := time.Now()
 			cipher, file, err := selectFile(matches)
 

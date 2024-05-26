@@ -20,7 +20,7 @@ func PrintStruct(s interface{}) {
 
 func DetectFile() (matches []string, err error) {
 	dir, _ := os.Getwd()
-	dir = GoUpLevel(dir, 1)
+	dir = GoUpLevel(dir, 0)
 
 	fmt.Println("Searching for files...")
 

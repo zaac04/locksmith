@@ -1,5 +1,5 @@
 #!/bin/bash
-url="https://github.com/zaac04/locksmith/releases/download/v1.0/locksmith"
+url="https://github.com/zaac04/locksmith/releases/download/v1.1/locksmith"
 wget -O locksmith $url
 binary_destination_folder="/usr/local/bin"
 sudo cp locksmith $binary_destination_folder

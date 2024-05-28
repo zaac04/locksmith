@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"locksmith/crypter"
+	"locksmith/file"
 	"locksmith/utilities"
 	"time"
 
@@ -15,17 +16,27 @@ var genKeyCmd = &cobra.Command{
 	Use:   "genkey",
 	Short: "Generate Secret key for encryption",
 	Run: func(cmd *cobra.Command, args []string) {
+		filename, _ := cmd.Flags().GetString("out")
 
 		ctxVal := utilities.ReadCtx(cmd.Context(), CtxKey)
 
 		//user start time
 		start := time.Now()
-		encryption := selectOption()
+		encryption := selectEncryption()
 		ctxVal.UserTime = time.Since(start)
 
 		cmd.Parent().SetContext(context.WithValue(cmd.Context(), CtxKey, ctxVal))
 		Lock, err := crypter.New(encryption)
-		utilities.LogIfError(err)
+
+		if err != nil {
+			utilities.LogIfError(err)
+			return
+		}
+
+		if filename != "" {
+			file.WriteFile(filename+".locksmith.key", []byte(Lock.GetKey()))
+			return
+		}
 
 		fmt.Println("key:", Lock.GetKey())
 	},
@@ -33,9 +44,10 @@ var genKeyCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(genKeyCmd)
+	genKeyCmd.Flags().StringP("out", "o", "", "output filename")
 }
 
-func selectOption() (encryption int) {
+func selectEncryption() (encryption int) {
 	options := []string{"AES 128bit", "AES 192bit", "AES 256bit (default)"}
 
 	mapOptions := map[string]int{

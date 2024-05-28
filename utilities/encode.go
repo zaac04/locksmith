@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"strings"
 	"time"
 )
 
@@ -31,5 +32,8 @@ func GetMD5Hash(data []byte) []byte {
 }
 
 func GetCipherName(name string) string {
+	if strings.Contains(name, ".locksmith") {
+		return name
+	}
 	return name + ".locksmith"
 }

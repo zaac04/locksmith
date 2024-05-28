@@ -1,11 +1,6 @@
 package main
 
-import (
-	"locksmith/cmd"
-)
-
-func init() {
-}
+import "locksmith/cmd"
 
 func main() {
 	cmd.Execute()

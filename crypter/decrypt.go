@@ -10,7 +10,7 @@ import (
 
 func DecryptFile(filename string, key string) {
 
-	header, original, err := getDecryptedValue(&filename, &key)
+	header, original, err := GetDecryptedValue(&filename, &key)
 
 	if err != nil {
 		utilities.LogIfError(err)
@@ -109,7 +109,7 @@ func ReadCipherFile(filename string) {
 	fmt.Println("--------")
 }
 
-func getDecryptedValue(file *string, key *string) (header header, cipher []byte, err error) {
+func GetDecryptedValue(file *string, key *string) (header header, cipher []byte, err error) {
 
 	header, data, err := loadCipherFile(*file)
 
@@ -118,7 +118,6 @@ func getDecryptedValue(file *string, key *string) (header header, cipher []byte,
 	}
 
 	lock, err := LoadKey(*key)
-
 	if err != nil {
 		return
 	}

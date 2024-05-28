@@ -43,6 +43,24 @@ func DetectFile() (matches []string, err error) {
 	return matches, err
 }
 
+func DoFileExist(file string) (Exist bool, err error) {
+	dir, _ := os.Getwd()
+
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil // Skip directories
+		}
+		if info.Name() == file {
+			Exist = true
+		}
+		return nil
+	})
+	return
+}
+
 func GoUpLevel(dir string, level int) string {
 	for range level {
 		dir = filepath.Dir(dir)

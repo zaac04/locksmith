@@ -15,12 +15,12 @@ import (
 
 func EncryptFile(fileName string, key string) {
 
-	l, err := readFile(fileName, key)
+	l, err := ReadFile(fileName, key)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
 	}
-	err = l.encrypt(fileName)
+	err = l.Encrypt(fileName)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
@@ -29,7 +29,7 @@ func EncryptFile(fileName string, key string) {
 }
 
 func Encrypt(l *Lock, filename string) {
-	err := l.encrypt(filename)
+	err := l.Encrypt(filename)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
@@ -54,7 +54,7 @@ func (l *Lock) encryptWithAES() (err error) {
 	return
 }
 
-func (l *Lock) encrypt(filename string) (err error) {
+func (l *Lock) Encrypt(filename string) (err error) {
 	err = l.encryptWithAES()
 	if err != nil {
 		return
@@ -69,7 +69,7 @@ func (l *Lock) encrypt(filename string) (err error) {
 	return
 }
 
-func (l *Lock) loadMessage(message []byte) {
+func (l *Lock) LoadMessage(message []byte) {
 	l.message = message
 }
 
@@ -101,19 +101,19 @@ func (l *Lock) generateData() (finalData string, err error) {
 	return
 }
 
-func FinDiff(originalFile string, CipherFile string, key string) (l *Lock, change bool, err error) {
-	_, decrypted, err := getDecryptedValue(&CipherFile, &key)
+func FinFileDiff(originalFile string, CipherFile string, key string) (l *Lock, change bool, err error) {
+	_, decrypted, err := GetDecryptedValue(&CipherFile, &key)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
 	}
 
-	lock, err := readFile(originalFile, key)
-	change = findDiff(&decrypted, &lock.message)
+	lock, err := ReadFile(originalFile, key)
+	change = FindByteDiff(&decrypted, &lock.message)
 	return &lock, change, err
 }
 
-func findDiff(cipher *[]byte, rawData *[]byte) (changed bool) {
+func FindByteDiff(cipher *[]byte, rawData *[]byte) (changed bool) {
 
 	cipherBytes := bytes.Split(*cipher, []byte("\n"))
 	originalBytes := bytes.Split(*rawData, []byte("\n"))
@@ -157,7 +157,7 @@ func findDiff(cipher *[]byte, rawData *[]byte) (changed bool) {
 	return false
 }
 
-func readFile(filename string, key string) (l Lock, err error) {
+func ReadFile(filename string, key string) (l Lock, err error) {
 	l, err = LoadKey(key)
 
 	if err != nil {
@@ -169,6 +169,10 @@ func readFile(filename string, key string) (l Lock, err error) {
 		os.Exit(1)
 	}
 
-	l.loadMessage(data)
+	l.LoadMessage(data)
 	return
+}
+
+func (l *Lock) GetMessage() []byte {
+	return l.message
 }

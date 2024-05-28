@@ -3,10 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	ui "locksmith/Ui"
 	"locksmith/crypter"
 	"locksmith/utilities"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/manifoldco/promptui"
@@ -18,11 +17,10 @@ var amend = &cobra.Command{
 	Short: "make amendments to cipher file",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctxVal := utilities.ReadCtx(cmd.Context(), CtxKey)
-		original, _ := cmd.Flags().GetString("original")
 		cipherFile, _ := cmd.Flags().GetString("cipher")
 		key, _ := cmd.Flags().GetString("key")
 
-		if original == "" && cipherFile == "" && key == "" {
+		if cipherFile == "" && key == "" {
 			matches, err := utilities.DetectFile()
 			if err != nil {
 				utilities.LogIfError(err)
@@ -35,7 +33,7 @@ var amend = &cobra.Command{
 			}
 
 			start := time.Now()
-			cipher, file, err := selectFile(matches)
+			cipher, err := selectFile(matches)
 
 			if err != nil {
 				utilities.LogIfError(err)
@@ -45,30 +43,20 @@ var amend = &cobra.Command{
 			fmt.Print("Encryption Key: ")
 			fmt.Scanf("%s", &key)
 			ctxVal.UserTime += time.Since(start)
-			original = file
 			cipherFile = cipher
 		}
-		lock, change, err := crypter.FinDiff(original, cipherFile, key)
+
+		_, cipherBytes, err := crypter.GetDecryptedValue(&cipherFile, &key)
 
 		if err != nil {
 			utilities.LogIfError(err)
 			return
 		}
 
-		if change {
-			start := time.Now()
-			confirm, err := confirmAmend()
-			if err != nil {
-				utilities.LogIfError(err)
-				return
-			}
-			ctxVal.UserTime += time.Since(start)
-			if confirm {
-				crypter.Encrypt(lock, original)
-			}
-		} else {
-			fmt.Println("No Change Detected!")
-		}
+		start := time.Now()
+		ui.EditFile(&cipherBytes, cipherFile, key)
+		ctxVal.UserTime += time.Since(start)
+
 		cmd.Parent().SetContext(context.WithValue(cmd.Context(), CtxKey, ctxVal))
 	},
 }
@@ -80,7 +68,7 @@ func init() {
 	amend.Flags().StringP("key", "k", "", "key")
 }
 
-func selectFile(matches []string) (result string, file string, err error) {
+func selectFile(matches []string) (result string, err error) {
 	prompt := promptui.Select{
 		Label:    "Select file to amend",
 		Items:    matches,
@@ -91,32 +79,5 @@ func selectFile(matches []string) (result string, file string, err error) {
 	if err != nil {
 		return
 	}
-	ext := filepath.Ext(result)
-	file, _ = strings.CutSuffix(result, ext)
-	return result, file, err
-}
-
-func confirmAmend() (proceed bool, err error) {
-	options := []string{"Yes", "No"}
-
-	mapOptions := map[string]bool{
-		"Yes": true,
-		"No":  false,
-	}
-	prompt := promptui.Select{
-		Label:    "Confirm Amend",
-		Items:    options,
-		HideHelp: true,
-	}
-
-	_, result, err := prompt.Run()
-
-	if err != nil {
-		return
-	}
-
-	if val, ok := mapOptions[result]; ok {
-		proceed = val
-	}
-	return
+	return result, err
 }

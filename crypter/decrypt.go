@@ -27,7 +27,7 @@ func DecryptFile(filename string, key string) {
 	file.WriteFile(".env", original)
 }
 
-func decodeFileContents(Components []string) (header header, data []byte, err error) {
+func decodeFileContents(Components []string) (header Header, data []byte, err error) {
 
 	headerBytes, err := utilities.B64Decode(Components[0])
 	if err != nil {
@@ -81,7 +81,7 @@ func compareChecksum(val1 string, val2 []byte) bool {
 	return true
 }
 
-func loadCipherFile(filename string) (header header, data []byte, err error) {
+func loadCipherFile(filename string) (header Header, data []byte, err error) {
 	content, err := file.ReadFile(filename)
 	if err != nil {
 		return
@@ -97,19 +97,22 @@ func loadCipherFile(filename string) (header header, data []byte, err error) {
 	return
 }
 
-func ReadCipherFile(filename string) {
+func ReadCipherFile(filename string) (header Header, size int) {
 	header, data, err := loadCipherFile(filename)
+	size = len(data)
 	if err != nil {
 		utilities.LogIfError(err)
 		return
 	}
 	fmt.Println("--------")
 	utilities.PrintStruct(header)
-	fmt.Println("Cipher:", len(data), "Bytes")
+	fmt.Println("Cipher:", size, "Bytes")
 	fmt.Println("--------")
+	return
+
 }
 
-func GetDecryptedValue(file *string, key *string) (header header, cipher []byte, err error) {
+func GetDecryptedValue(file *string, key *string) (header Header, cipher []byte, err error) {
 
 	header, data, err := loadCipherFile(*file)
 

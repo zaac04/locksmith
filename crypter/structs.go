@@ -9,7 +9,7 @@ type Lock struct {
 	encryption int
 }
 
-type header struct {
+type Header struct {
 	LastModified string
 	CheckSum     string
 	Algorithm    string

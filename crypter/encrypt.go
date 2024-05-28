@@ -84,7 +84,7 @@ func (l *Lock) getAES() (gcm cipher.AEAD, err error) {
 
 func (l *Lock) generateData() (finalData string, err error) {
 
-	header := header{
+	header := Header{
 		LastModified: utilities.GetTimeStamp(),
 		CheckSum:     utilities.GetMD5String(l.message),
 		Algorithm:    fmt.Sprint("AES ", l.encryption, "bit encryption"),

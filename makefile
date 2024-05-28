@@ -1,6 +1,6 @@
 BINARY_NAME=locksmith
 DATE =$(shell date "+%d %b %Y")
-Version=v1.1
+Version=v1.5
 Maintainer="Issac"
 
 BUILD_FILE := build.txt

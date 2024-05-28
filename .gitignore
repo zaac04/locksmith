@@ -1,3 +1,5 @@
 *.env
 locksmith
 sample.env.locksmith
+*.locksmith
+*.locksmith.key

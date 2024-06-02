@@ -3,8 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	ui "locksmith/Ui"
-	"locksmith/crypter"
 	"locksmith/utilities"
 	"time"
 
@@ -46,15 +44,15 @@ var amend = &cobra.Command{
 			cipherFile = cipher
 		}
 
-		_, cipherBytes, err := crypter.GetDecryptedValue(&cipherFile, &key)
+		//		_, cipherBytes, err := crypter.GetDecryptedValue(&cipherFile, &key)
 
-		if err != nil {
-			utilities.LogIfError(err)
-			return
-		}
+		// if err != nil {
+		// 	utilities.LogIfError(err)
+		// 	return
+		// }
 
 		start := time.Now()
-		ui.EditFile(&cipherBytes, cipherFile, key)
+		//ui.EditFile(&cipherBytes, cipherFile, key)
 		ctxVal.UserTime += time.Since(start)
 
 		cmd.Parent().SetContext(context.WithValue(cmd.Context(), CtxKey, ctxVal))

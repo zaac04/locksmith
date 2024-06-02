@@ -18,7 +18,7 @@ var decryptCmd = &cobra.Command{
 		filename = utilities.GetCipherName(filename)
 
 		key, _ := cmd.Flags().GetString("key")
-		if strings.Contains(key, ".lkey") {
+		if strings.Contains(key, ".locksmith.key") {
 			data, err := file.ReadFile(key)
 			if err != nil {
 				utilities.LogIfError(err)

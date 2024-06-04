@@ -6,10 +6,6 @@ export function GetEnvs() {
   return window['go']['ui']['App']['GetEnvs']();
 }
 
-export function Greet(arg1) {
-  return window['go']['ui']['App']['Greet'](arg1);
-}
-
 export function IsStagePresent(arg1) {
   return window['go']['ui']['App']['IsStagePresent'](arg1);
 }

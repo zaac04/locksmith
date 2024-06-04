@@ -24,10 +24,6 @@ func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
-}
-
 func (a *App) GetEnvs() (res []structs.Stages, err error) {
 	matches, err := utilities.DetectFile()
 	if err != nil {
@@ -128,6 +124,7 @@ func (a *App) WriteCipherFile(stage string, key string, val string) (newkey stri
 	if crypter.FindByteDiff(&cipherByte, &new_value) {
 		lock.Encrypt(stage)
 	} else {
+		return key, fmt.Errorf("error writing file")
 		fmt.Println("No Change Detected!")
 	}
 

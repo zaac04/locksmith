@@ -18,31 +18,35 @@ function Env() {
   const modalEl = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [stages, setStages] = useState<StageInfo[]>();
-  const [stage, setStage] = useState("")
-  const [location, setLocation] = useState("")
+  const [stage, setStage] = useState("");
+  const [location, setLocation] = useState("");
   const getStages = () => {
-    GetEnvs().then((value) => setStages(value));
+    GetEnvs()
+      .then((value) => setStages(value))
+      .catch((err) => {
+        throw err;
+      });
   };
-
+  ``;
   const handleOpenModal = () => {
-    setStage("")
-    setLocation("")
+    setStage("");
+    setLocation("");
     setIsOpen(!isOpen);
   };
 
   const handleClose = (e: React.MouseEvent) => {
     if (modalEl.current && !modalEl.current.contains(e.target as Node)) {
       setIsOpen(!isOpen);
-      setStage("")
-      setLocation("")
+      setStage("");
+      setLocation("");
     }
   };
 
-  const handleEditFile=(stage:string,location:string)=>{
-      setStage(stage)
-      setLocation(location)
-      setIsOpen(prev=>!prev)
-  }
+  const handleEditFile = (stage: string, location: string) => {
+    setStage(stage);
+    setLocation(location);
+    setIsOpen((prev) => !prev);
+  };
 
   const refresh = () => getStages();
 
@@ -52,7 +56,7 @@ function Env() {
 
   return (
     <>
-      <div className="p-3 m-6" onClick={handleClose}>
+      <div className="p-3 m-6 h-full" onClick={handleClose}>
         <div className="flex justify-between">
           <p className=" text-xl font-semibold p-1 m-1">Stages</p>
 
@@ -75,19 +79,28 @@ function Env() {
             </button>
           </div>
         </div>
-        <div className="flex flex-wrap justify-start">
-          {stages?.map((stage) => (
-            <Card
-              stage={stage.StageName}
-              LastModified={stage.LastModified}
-              Algorithm={stage.Algorithm}
-              FileName={stage.FileName}
-              CipherBytes={stage.CipherSize}
-              OnView={()=>handleEditFile(stage.StageName,stage.Id)}
-            />
-          ))}
+
+        <div className="h-full w-full">
+          {stages && stages.length > 0 ? (
+            <div className="flex flex-wrap justify-start">
+              {stages?.map((stage) => (
+                <Card
+                  stage={stage.StageName}
+                  LastModified={stage.LastModified}
+                  Algorithm={stage.Algorithm}
+                  FileName={stage.FileName}
+                  CipherBytes={stage.CipherSize}
+                  OnView={() => handleEditFile(stage.StageName, stage.Id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-center items-center align-middle h-full">
+              No Stages Found
+            </div>
+          )}
         </div>
- 
+
         {isOpen && (
           <div className="fixed inset-0 flex items-center justify-center">
             <div className="fixed inset-0 bg-gray-700 bg-opacity-95"></div>
@@ -95,7 +108,12 @@ function Env() {
               className="bg-slate-800 w-3/4 h-2/3 p-8 rounded-lg z-10 overflow-auto"
               ref={modalEl}
             >
-              <Modal OnClose={()=> setIsOpen(!isOpen)} refresh={()=>refresh()} stage={stage} Location={location}/>
+              <Modal
+                OnClose={() => setIsOpen(!isOpen)}
+                refresh={() => refresh()}
+                stage={stage}
+                Location={location}
+              />
             </div>
           </div>
         )}

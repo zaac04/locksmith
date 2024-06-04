@@ -23,7 +23,7 @@ build:
 
 
 buildWindows:
-	wails build  -platform windows/amd64   -ldflags "-w -s -X 'locksmith/version.Maintainer=${Maintainer}' -X 'locksmith/version.Version=${Version}' -X 'locksmith/version.BuildNo=${NEW_BUILD_NUMBER}' -X 'locksmith/version.Date=${DATE}'" -o ${BINARY_NAME}
+	wails build  -platform windows/amd64  -webview2 embed  -ldflags "-w -s -X 'locksmith/version.Maintainer=${Maintainer}' -X 'locksmith/version.Version=${Version}' -X 'locksmith/version.BuildNo=${NEW_BUILD_NUMBER}' -X 'locksmith/version.Date=${DATE}'" -o ${BINARY_NAME}
 	upx --best --lzma ./build/bin/${BINARY_NAME}
 	@$(MAKE) update_build_number
 

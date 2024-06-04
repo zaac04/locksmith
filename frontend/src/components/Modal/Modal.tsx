@@ -1,17 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { SiTicktick } from "react-icons/si";
+import { VscLoading } from "react-icons/vsc";
 import { DiffEditor, Editor } from "@monaco-editor/react";
 import {
   IsStagePresent,
   ReadCipherFile,
   WriteCipherFile,
 } from "../../../wailsjs/go/ui/App";
+import { debounce } from "lodash";
 
 interface ModalProps {
   OnClose: () => void;
   refresh: () => void;
   stage: string;
-  Location:string
+  Location: string;
 }
 
 const Modal = (props: ModalProps) => {
@@ -24,19 +26,24 @@ const Modal = (props: ModalProps) => {
   const [currentStage, setCurrentStage] = useState(0);
   const [isStageAvailable, setIsStageAvailable] = useState(false);
   const [newStage, setNewStage] = useState<string>("");
+  const [IsLoading, setIsLoading] = useState(false);
 
   const handleModalNextStage = () => setCurrentStage(currentStage + 1);
 
   useEffect(() => {
     if (props.stage !== "") {
       setNewStage(props.stage);
-      IsStagePresent(props.stage).then((valid) => {
-        setShowEncryptionBox(valid);
-        setIsStageAvailable(!valid);
-        setShowCreateToggle(!valid);
-      });
+      IsStagePresent(props.stage)
+        .then((valid) => {
+          setShowEncryptionBox(valid);
+          setIsStageAvailable(!valid);
+          setShowCreateToggle(!valid);
+        })
+        .catch((err) => {
+          throw err;
+        });
     } else {
-      resetState()
+      resetState();
     }
   }, [props.stage]);
 
@@ -45,42 +52,63 @@ const Modal = (props: ModalProps) => {
       setText("");
       setChangedValue("");
     } else if (key) {
-      ReadCipherFile(newStage, key).then((value) => {
-        setText(value);
-        setChangedValue(value);
-      });
+      ReadCipherFile(newStage, key)
+        .then((value) => {
+          setText(value);
+          setChangedValue(value);
+        })
+        .catch((err) => {
+          throw err;
+        });
     }
     handleModalNextStage();
   };
 
   const handleWrite = () => {
-    const temp = props.stage!="" && props.Location!="" ? props.Location : newStage
-    console.log(temp)
+    const temp =
+      props.stage != "" && props.Location != "" ? props.Location : newStage;
 
-
-    WriteCipherFile(temp, key, changedValue).then(() => {
-      console.log("Success");
-      handleCloseModal();
-      props.OnClose();
-      props.refresh();
-    });
+    WriteCipherFile(temp, key, changedValue)
+      .then(() => {
+        console.log("Success");
+        handleCloseModal();
+        props.OnClose();
+        props.refresh();
+      })
+      .catch((err) => {
+        throw err;
+      });
   };
 
   const handleStageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const stageName = event.target.value;
+    setIsLoading(true);
+    setIsStageAvailable(false);
     setNewStage(stageName);
-
-    if (!stageName) {
-      resetState();
-      return;
-    }
-
-    IsStagePresent(stageName).then((valid) => {
-      setShowEncryptionBox(valid);
-      setIsStageAvailable(!valid);
-      setShowCreateToggle(!valid);
-    });
+    debounceSearch(stageName);
   };
+
+  const debounceSearch = useRef(
+    debounce(async (stageName: string) => {
+      if (stageName) {
+        console.log(stageName);
+        IsStagePresent(stageName).then((valid) => {
+          setShowEncryptionBox(valid);
+          setIsStageAvailable(!valid);
+          setShowCreateToggle(!valid);
+        });
+      } else {
+        resetState();
+      }
+      setIsLoading(false);
+    }, 600)
+  ).current;
+
+  React.useEffect(() => {
+    return () => {
+      debounceSearch.cancel();
+    };
+  }, [debounceSearch]);
 
   const handleCreateKeyToggle = () => {
     setShowEncryptionBox(createKey);
@@ -109,12 +137,15 @@ const Modal = (props: ModalProps) => {
         <label className="w-2/12 text-wrap pt-1">Stage Name :</label>
         <input
           type="text"
-          className="p-2 m-1"
+          className="p-2 m-1 bg-slate-800 text-gray-300"
           placeholder="Stage name"
           value={newStage}
           autoFocus
           onChange={handleStageChange}
         />
+        <VscLoading
+          className={`m-1 animate-spin ${IsLoading ? "visible" : "hidden"} `}
+        ></VscLoading>
         <span
           className={`p-1 m-1 flex ${isStageAvailable ? "visible" : "hidden"}`}
         >
@@ -143,14 +174,16 @@ const Modal = (props: ModalProps) => {
         <label className="w-2/12 text-wrap">Encryption Key:</label>
         <input
           type="password"
-          className="p-2 m-1"
+          className="p-2 m-1  bg-slate-800 text-gray-300"
           value={key}
           autoFocus
           onChange={(e) => setKey(e.target.value)}
         />
       </div>
       <button
-        className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        className={`mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded ${
+          isStageAvailable || showEncryptionBox ? "visible" : "hidden"
+        }`}
         onClick={handleModalFetchEnv}
       >
         Next
@@ -187,6 +220,31 @@ const Modal = (props: ModalProps) => {
 
     // Stage 2
     <div className="w-full h-full" key={2}>
+      <h2 className="text-2xl font-bold mb-4">Review</h2>
+      <div className="h-3/4">
+        <DiffEditor
+          theme="vs-dark"
+          height="100%"
+          original={text}
+          modified={changedValue}
+          options={{ readOnly: true }}
+        />
+      </div>
+      <button
+        className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        onClick={() => setCurrentStage(currentStage - 1)}
+      >
+        Previous
+      </button>
+      <button
+        className="ml-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        onClick={handleWrite}
+      >
+        Write
+      </button>
+    </div>,
+
+    <div className="w-full h-full" key={3}>
       <h2 className="text-2xl font-bold mb-4">Review</h2>
       <div className="h-3/4">
         <DiffEditor

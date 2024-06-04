@@ -4,8 +4,6 @@ import {structs} from '../models';
 
 export function GetEnvs():Promise<Array<structs.Stages>>;
 
-export function Greet(arg1:string):Promise<string>;
-
 export function IsStagePresent(arg1:string):Promise<boolean>;
 
 export function ReadCipherFile(arg1:string,arg2:string):Promise<string>;

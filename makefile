@@ -1,7 +1,7 @@
 BINARY_NAME=lockenv
 EXE_NAME=lockenv.exe
 DATE =$(shell date "+%d %b %Y")
-Version=v1.5
+Version=v2.0
 Maintainer="Zaac04"
 
 BUILD_FILE := build.txt

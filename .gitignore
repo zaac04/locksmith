@@ -1,6 +1,8 @@
 *.env
 locksmith
 sample.env.locksmith
+lockenv
+*.exe
 *.locksmith
 *.locksmith.key
 # Logs

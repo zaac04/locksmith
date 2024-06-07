@@ -1,14 +1,41 @@
 import React, { useEffect, useRef, useState } from "react";
 import { SiTicktick } from "react-icons/si";
 import { VscLoading } from "react-icons/vsc";
-import { DiffEditor, Editor } from "@monaco-editor/react";
+import { DiffEditor, Editor, loader } from "@monaco-editor/react";
+import * as monaco from 'monaco-editor';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+
+self.MonacoEnvironment = {
+  getWorker(_, label) {
+    if (label === 'json') {
+      return new jsonWorker();
+    }
+    if (label === 'css' || label === 'scss' || label === 'less') {
+      return new cssWorker();
+    }
+    if (label === 'html' || label === 'handlebars' || label === 'razor') {
+      return new htmlWorker();
+    }
+    if (label === 'typescript' || label === 'javascript') {
+      return new tsWorker();
+    }
+    return new editorWorker();
+  },
+};
+
+loader.config({ monaco });
 import {
   IsStagePresent,
   ReadCipherFile,
   WriteCipherFile,
 } from "../../../wailsjs/go/ui/App";
 import { debounce } from "lodash";
-
+import { Bounce, toast } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 interface ModalProps {
   OnClose: () => void;
   refresh: () => void;
@@ -40,6 +67,7 @@ const Modal = (props: ModalProps) => {
           setShowCreateToggle(!valid);
         })
         .catch((err) => {
+          toast(err)
           throw err;
         });
     } else {
@@ -51,17 +79,29 @@ const Modal = (props: ModalProps) => {
     if (!key && createKey) {
       setText("");
       setChangedValue("");
+      handleModalNextStage();
     } else if (key) {
       ReadCipherFile(newStage, key)
         .then((value) => {
           setText(value);
           setChangedValue(value);
+          handleModalNextStage();
         })
-        .catch((err) => {
-          throw err;
+        .catch(() => {
+          toast.error("invalid key entered", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
+            transition: Bounce,
+            });
         });
     }
-    handleModalNextStage();
+
   };
 
   const handleWrite = () => {
@@ -76,7 +116,17 @@ const Modal = (props: ModalProps) => {
         props.refresh();
       })
       .catch((err) => {
-        throw err;
+        toast.error(err, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+          transition: Bounce,
+          });
       });
   };
 
@@ -130,6 +180,7 @@ const Modal = (props: ModalProps) => {
   };
 
   const stages = [
+    
     // Stage 0
     <div className="w-full h-full" key={0}>
       <h2 className="text-2xl font-bold mb-4">Enter Stage</h2>
@@ -137,7 +188,7 @@ const Modal = (props: ModalProps) => {
         <label className="w-2/12 text-wrap pt-1">Stage Name :</label>
         <input
           type="text"
-          className="p-2 m-1 bg-slate-800 text-gray-300"
+          className="p-2 m-1 bg-gray-950 text-gray-300"
           placeholder="Stage name"
           value={newStage}
           autoFocus
@@ -174,7 +225,7 @@ const Modal = (props: ModalProps) => {
         <label className="w-2/12 text-wrap">Encryption Key:</label>
         <input
           type="password"
-          className="p-2 m-1  bg-slate-800 text-gray-300"
+          className="p-2 m-1  bg-gray-950 text-gray-300 border-emerald-50"
           value={key}
           autoFocus
           onChange={(e) => setKey(e.target.value)}

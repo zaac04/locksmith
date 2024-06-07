@@ -124,8 +124,7 @@ func (a *App) WriteCipherFile(stage string, key string, val string) (newkey stri
 	if crypter.FindByteDiff(&cipherByte, &new_value) {
 		lock.Encrypt(stage)
 	} else {
-		return key, fmt.Errorf("error writing file")
-		fmt.Println("No Change Detected!")
+		return key, fmt.Errorf("error writing file: no change detected")
 	}
 
 	return newkey, nil

@@ -17,13 +17,10 @@ var assets embed.FS
 func main() {
 	if len(os.Args) == 1 {
 		app := ui.NewApp()
-
-		// Create application with options
 		err := wails.Run(&options.App{
 			AssetServer: &assetserver.Options{
 				Assets: assets,
 			},
-			Fullscreen: true,
 			//BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 			OnStartup: app.Startup,
 			Bind: []interface{}{

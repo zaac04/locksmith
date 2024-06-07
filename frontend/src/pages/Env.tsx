@@ -4,6 +4,7 @@ import { FaSyncAlt } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react";
 import Card from "../components/Card/Card";
 import Modal from "../components/Modal/Modal";
+import { Bounce, ToastContainer } from "react-toastify";
 
 interface StageInfo {
   Algorithm: string;
@@ -56,7 +57,22 @@ function Env() {
 
   return (
     <>
-      <div className="p-3 m-6 h-full" onClick={handleClose}>
+      <div className="p-3 m-6 h-screen" onClick={handleClose}>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          transition={Bounce}
+        />
+        {/* Same as */}
+        <ToastContainer />
         <div className="flex justify-between">
           <p className=" text-xl font-semibold p-1 m-1">Stages</p>
 
@@ -80,7 +96,7 @@ function Env() {
           </div>
         </div>
 
-        <div className="h-full w-full">
+        <div className="h-full w-full overflow-auto">
           {stages && stages.length > 0 ? (
             <div className="flex flex-wrap justify-start">
               {stages?.map((stage) => (
